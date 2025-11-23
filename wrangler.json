@@ -1,7 +1,7 @@
 {
     "$schema": "node_modules/wrangler/config-schema.json",
-    "name": "hongyi-blog",
-    "compatibility_date": "2025-10-02",
+    "name": "mingkang",
+    "compatibility_date": "2025-11-19",
     "assets": {
       "directory": "./dist"
     },

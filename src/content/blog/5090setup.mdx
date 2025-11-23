@@ -1,0 +1,106 @@
+---
+title: 'A Complete Guide to Setting Up DivPrune / LLaVA on an NVIDIA RTX 5090 (CUDA 12.8, PyTorch Nightly)'
+description: ''
+tags: ['Token Pruning', 'Conda', 'DivPrune']
+pubDate: 'Nov 19                                                                                                                                                                                                                                                                                                                                                  2025'
+heroImage: '../../assets/blogs/blog1/blog1-kocho.jpg'
+---
+
+### Background
+I was looking into [divprune](https://github.com/vbdi/divprune) a token-pruning framework, and evaluating its potential for improving the efficiency of medical VLMs.
+I am investigating how to set up the environment and adapt the pruning pipeline so it can handle specialized medical tokens more effectively. My goal is to build a reproducible environment that enables further fine-tuning and experimentation on medical imaging tasks.
+
+
+However, setting up the suitable environment for DivPrune on RTX 5090 is not as simple as RTX 4090.Although I have searched into the internet, it is still rare to see the solutions, but luckily I found one github issue that perfectly solved it.
+The NVIDIA RTX 5090 (Blackwell architecture) is extremely powerful, but it also breaks many existing PyTorch and VLM workflows.
+
+Most public wheels only support CUDA ≤ 12.4 and compute capability ≤ 9.0, while the 5090 requires:<br />
+<span style={{ color: 'red' }}>
+-CUDA 12.8+<br />
+-sm_120 support<br />
+-NVIDIA driver ≥ 570.xx
+</span>
+
+In this post, I document how I installed PyTorch nightly, configured CUDA 12.8, and successfully ran DivPrune + LLaVA + lmms_eval on the 5090 — including all the errors I hit and how I fixed them.
+
+### Check Your System (Important!)
+
+
+```bash
+nvidia-smi
+```
+Example output you can paste:
+```bash
+Driver Version: 570.195.03
+CUDA Version: 12.8
+GPU: NVIDIA GeForce RTX 5090
+```
+If your driver is lower than 570, PyTorch cannot load CUDA 13.0 kernels and you will see:
+The NVIDIA driver on your system is too old (found version 12080).
+Install Miniconda / Create a clean environment:
+```bash
+conda create -n divprune python=3.10 -y
+conda activate divprune
+```
+Install PyTorch Nightly with CUDA 12.8
+```bash
+pip3 install --pre torch torchvision --index-url https://download.pytorch.org/whl/nightly/cu128
+```
+If you find ERROR: ResolutionImpossible it because its index doesn't include nvidia-nvshmem-cu12 you can try download NVIDIA NVSHMEM
+```bash
+pip install nvidia-nvshmem-cu12==3.4.5
+```
+torchaudio is not available for CUDA 12.8 at the moment, so skip it.
+
+This is the first version that includes compute capability sm_120 support required for the RTX 5090.
+
+Verify PyTorch + GPU Support
+```bash
+import torch
+print(torch.version.cuda)
+print(torch.cuda.get_device_name(0))
+print(torch.cuda.is_available())
+```
+Good output should look like:
+```bash
+13.0
+NVIDIA GeForce RTX 5090
+True
+```
+If you see driver too old or a crash — instruct them to update the driver.
+
+### Common Errors & Fixes (Real Debugging Section)
+❌ Error 1:<br />
+
+```bash
+NVIDIA GeForce RTX 5090 with CUDA capability sm_120 is not compatible
+```
+➡ Fix: Install nightly PyTorch with CUDA 12.8.<br />
+
+❌ Error 2:<br />
+no kernel image is available for execution on the device
+
+This happens when:  
+1. The model (like LLaVA, MPlug, FlashAttention) loads precompiled kernels not built for sm_120  <br />
+2. Your torch version is too old<br />
+
+Solution:  <br />
+1. Update torch to nightly<br />
+2. Rebuild flash-attn or use CPU fallback<br />
+3. Update lmms_eval / LLaVA to the newest commit<br />
+
+❌ Error 3:<br />
+```bash
+The NVIDIA driver on your system is too old (found version 12080)
+```
+➡ Fix:
+Upgrade to the 570.xx driver to support CUDA 12.8
+
+### Tips for 5090 Users
+
+List your own recommendations:<br />
+1.Always use nightly PyTorch until official support lands.<br />
+2.Avoid old FlashAttention builds.<br />
+3.Some VLMs ship CUDA kernels that don’t support sm_120 — disable fused ops.<br />
+4.Use pip install --pre whenever installing CUDA-dependent libraries.<br />
+5.If using lmms_eval, ensure you are on the latest commit.

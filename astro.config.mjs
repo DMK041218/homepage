@@ -9,6 +9,6 @@ import preact from '@astrojs/preact';
 
 // https://astro.build/config
 export default defineConfig({
-    site: 'https://hongyicai.cc',
+    site: 'https://mingkang.dmk72522.workers.dev/',
     integrations: [mdx(), sitemap(), icon(), preact()],
 });
