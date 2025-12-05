@@ -5,7 +5,7 @@ This is a template that serves as your academic homepage + personal blog page.
 It is very welcomed to use this as your astro template if interested.
 
 ## Demo
-<img width="1617" height="1031" alt="image" src="" />
+<img width="1617" height="1031" alt="image" src="homepage.png" />
 
 
 ## Usage
