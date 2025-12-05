@@ -1,11 +1,11 @@
-# Hongyi's Blog Template
+# Mingkang's Blog Template
 
 This is a template that serves as your academic homepage + personal blog page.
 
 It is very welcomed to use this as your astro template if interested.
 
 ## Demo
-<img width="1617" height="1031" alt="image" src="https://github.com/user-attachments/assets/1b007f3c-885d-47c8-8d83-d679d9fb1e67" />
+<img width="1617" height="1031" alt="image" src="" />
 
 
 ## Usage
@@ -38,6 +38,6 @@ npm run build
 To push into wrangler for your cloudflare:
 
 ```bash
-npm run build && npm run deploy 
+npm run build && npx wrangler deploy
 ```
 
