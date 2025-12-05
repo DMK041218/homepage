@@ -8,6 +8,7 @@ import headShot from "../assets/Haibara.jpg";
 import PublicationCard from "../components/Publication.astro";
 import publications from "../data/publications.json";
 import { Icon } from "astro-icon/components";
+
 const sortedPubs = publications.sort((a, b) => {
 	return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
 });
@@ -61,6 +62,43 @@ const sortedPubs = publications.sort((a, b) => {
 				margin-top: 80px;
 			}
 
+            /* --- 新增：Project 板块的样式 --- */
+            #container-projects {
+                margin-top: 60px;
+            }
+
+            .project-title {
+                margin-bottom: 0.5rem;
+                font-size: 1.1em;
+                font-weight: bold;
+            }
+
+            .project-description {
+                margin-bottom: 1.5rem;
+                font-size: 0.95em;
+                color: #555;
+            }
+
+            /* 四宫格视频布局 */
+            .video-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr); /* 两列 */
+                gap: 15px; /* 视频之间的间距 */
+                width: 100%;
+            }
+
+            .video-item {
+                width: 100%;
+                height: auto;
+                border-radius: 8px; /* 圆角，让视频看起来更柔和 */
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                object-fit: cover;
+                background-color: #000; /* 加载前的背景色 */
+                aspect-ratio: 16/9; /* 强制保持 16:9 比例，你可以根据视频调整 */
+            }
+
+            /* --- 结束 Project 样式 --- */
+
 			.social-links {
 				display: flex;
 				gap: 1.1rem;
@@ -93,6 +131,7 @@ const sortedPubs = publications.sort((a, b) => {
 				}
 			}
 
+
 			/* Float up 动画 */
 			@keyframes floatUp {
 				from {
@@ -119,6 +158,12 @@ const sortedPubs = publications.sort((a, b) => {
 				animation: floatUp 0.8s ease-out 0.4s forwards;
 				opacity: 0;
 			}
+
+            /* Project 板块的延迟动画，比 Publication 晚一点 */
+            #container-projects {
+                animation: floatUp 0.8s ease-out 0.6s forwards;
+                opacity: 0;
+            }
 		</style>
 	</head>
 	<body>
@@ -155,32 +200,26 @@ const sortedPubs = publications.sort((a, b) => {
 						<h2>Mingkang Dong | 董明康</h2>
 
 						<p>
-							Hi there! I am <b>Mingkang Dong</b>, an undergraduate student majoring in Software engineering at 
-  <b>Universiti Malaya</b>. My current research and engineering interests lie at the intersection of 
-  <b>Vision-Language Models (VLMs)</b>, <b>Large Language Models (LLMs)</b>, and <b>Embodied AI</b>. 
-  Recently, I have been working on <b>Vision-Language-Action (VLA) systems</b> for robotic understanding 
-  and multimodal reasoning, as well as <b>medical VLMs</b> that enable visual-textual understanding 
-  in radiology and clinical imaging domains.
+							Hi there! I am <b>Mingkang Dong</b>, an undergraduate student majoring in Software engineering at 
+  <b>Universiti Malaya</b>. My current research and engineering interests lie at the intersection of 
+  <b>Vision-Language Models (VLMs)</b>, <b>Large Language Models (LLMs)</b>, and <b>Embodied AI</b>. 
+  Recently, I have been working on <b>Vision-Language-Action (VLA) systems</b> for robotic understanding 
+  and multimodal reasoning, as well as <b>medical VLMs</b> that enable visual-textual understanding 
+  in radiology and clinical imaging domains.
 						</p>
 						<p>
-							I have hands-on experience in <b>fine-tuning and evaluating large multimodal models</b>, and my previous works 
-  have been accepted at top-tier conferences such as <b>CVPR</b>. I am currently a research assistant at 
-  <b>Shanghai Jiao Tong University</b>, where I focus on integrating multimodal representation learning 
-  with embodied intelligence and interactive perception. 
+							I have hands-on experience in <b>fine-tuning and evaluating large multimodal models</b> I am currently a research assistant at 
+  <b>Shanghai Jiao Tong University</b>, where I focus on integrating multimodal representation learning 
+  with embodied intelligence and interactive perception. 
 						</p>
 						<p>
-							Understanding how intelligence emerges from perception, language, and action — and turning that understanding into working systems — 
-  is the challenge that keeps me excited every single day.
+							Understanding how intelligence emerges from perception, language, and action — and turning that understanding into working systems — 
+  is the challenge that keeps me excited every single day.
 						</p>
 
 						<p>
-							I am also a freelance teacher in A-level Computer
-							Science during my spare time and English during my summer holiday of 12th
-							grade. I am going to finish my undergraduate degree of Computer Science at Universiti Malaya in 2027 Feb.
+							<b>I am currently looking for a Mphil position or a funded RA position, available starting from 2027 March, physical internship preferred</b>
 						</p>
-						<a href="https://github.com/xcloudfance/hongyicai-blog"
-							>Blog Template</a
-						>
 					</div>
 				</div>
 
@@ -204,6 +243,35 @@ const sortedPubs = publications.sort((a, b) => {
 						}
 					</ul>
 				</div>
+
+                <div id="container-projects">
+                    <h4>Projects</h4>
+                    
+                    <div class="project-card">
+                        <div class="project-title">
+                            Evo-1 Embodied Deployment: Full-Stack VLA Implementation on SO101 robot arm
+                        </div>
+                        <p class="project-description">
+                            During my intern in Shanghai Jiao Tong University, I led the deployment of our team's lightweight Evo-1 VLA model Through optimization and adaptation for the SO101 robotic arm, I achieved outstanding performance in complex, real-world tasks. Key achievements include Picking up trash,Precision placement of tennis balls, Putting rectangular into the box, and Fine grasping of delicate items like snacks.
+
+                        <div class="video-grid">
+							<video class="video-item" src="/videos/demo1.mp4" autoplay loop muted playsinline>
+								<source src="/videos/demo1.mp4" type="video/mp4" />
+								
+							</video>
+							<video class="video-item" src="/videos/demo2.mp4" autoplay loop muted playsinline>
+								<source src="/videos/demo2.mp4" type="video/mp4" />
+							</video>
+							<video class="video-item" src="/videos/demo3.mp4" autoplay loop muted playsinline>
+								<source src="/videos/demo3.mp4" type="video/mp4" />
+							</video>
+							<video class="video-item" src="/videos/demo4.mp4" autoplay loop muted playsinline>
+								<source src="/videos/demo4.mp4" type="video/mp4" />
+							</video>
+						</div>
+                    </div>
+                </div>
+
 			</div>
 		</main>
 		<Footer />
