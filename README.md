@@ -38,6 +38,6 @@ npm run build
 To push into wrangler for your cloudflare:
 
 ```bash
-npm run build && npm run deploy 
+npx wrangler pages deploy dist --project-name mingkang
 ```
 

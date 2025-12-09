@@ -82,8 +82,8 @@ const sortedPubs = publications.sort((a, b) => {
             /* 四宫格视频布局 */
             .video-grid {
                 display: grid;
-                grid-template-columns: repeat(2, 1fr); /* 两列 */
-                gap: 15px; /* 视频之间的间距 */
+                grid-template-columns: repeat(3, 1fr); /* 3列 */
+                gap: 0px; /* 视频之间的间距 */
                 width: 100%;
             }
 
@@ -252,9 +252,10 @@ const sortedPubs = publications.sort((a, b) => {
                             Evo-1 Embodied Deployment: Full-Stack VLA Implementation on SO101 robot arm
                         </div>
                         <p class="project-description">
-                            During my intern in Shanghai Jiao Tong University, I led the deployment of our team's lightweight Evo-1 VLA model Through optimization and adaptation for the SO101 robotic arm, I achieved outstanding performance in complex, real-world tasks. Key achievements include Picking up trash,Precision placement of tennis balls, Putting rectangular into the box, and Fine grasping of delicate items like snacks.
+                            During my intern in Shanghai Jiao Tong University, I led the deployment of our team's lightweight Evo-1 VLA model Through optimization and adaptation for the SO101 robotic arm, I achieved great performance in complex, real-world tasks. Key achievements include Picking up trash, Precision placement of tennis balls, Precision placement of golf balls, Putting rectangular objects into the box, Fine grasping of delicate items like snacks, and Grasping of shuttlecocks.
 
-                        <div class="video-grid">
+                       <!-- HTML：3x3 网格，但只放 6 个视频（上面两行） -->
+						<div class="video-grid">
 							<video class="video-item" src="/videos/demo1.mp4" autoplay loop muted playsinline>
 								<source src="/videos/demo1.mp4" type="video/mp4" />
 								
@@ -268,6 +269,15 @@ const sortedPubs = publications.sort((a, b) => {
 							<video class="video-item" src="/videos/demo4.mp4" autoplay loop muted playsinline>
 								<source src="/videos/demo4.mp4" type="video/mp4" />
 							</video>
+							<video class="video-item" src="/videos/demo5.mp4" autoplay loop muted playsinline>
+								<source src="/videos/demo4.mp4" type="video/mp4" />
+							</video>
+							<video class="video-item" src="/videos/demo6.mp4" autoplay loop muted playsinline>
+								<source src="/videos/demo4.mp4" type="video/mp4" />
+							</video>
+						</div>
+
+
 						</div>
                     </div>
                 </div>
