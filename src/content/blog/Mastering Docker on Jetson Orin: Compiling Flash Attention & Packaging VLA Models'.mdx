@@ -1,0 +1,305 @@
+---
+title: 'Mastering Docker on Jetson Orin: Compiling Flash Attention & Packaging VLA Models'
+description: >-
+  A production-grade guide to packaging Evo-1, compiling Flash Attention 2 from source, and fixing Ubuntu 24.04 EGL rendering issues on NVIDIA Jetson Orin.
+pubDate: 2025-12-14
+tags:
+  - Docker
+  - FlashAttention
+  - JetsonOrin
+  - DevOps
+heroImage: >-
+  ../../assets/blogs/JetsonOrinDocker/Harumiena.png
+---
+
+
+
+## Background:
+Deploying Vision-Language-Action (VLA) models like **Evo-1** on the Edge is the holy grail of embodied AI. The NVIDIA Jetson Orin offers the perfect hardware for this, but the software stack presents a unique set of challenges that standard tutorials fail to address.
+
+I am attempting to deploy and package it into an image so that other users of JetsonOrin can use it directly without needing to configure an environment.
+- **Model:** Evo-1 (Requires Flash Attention 2 for speed).
+- **Simulation:** MetaWorld (Requires hardware-accelerated OpenGL/EGL rendering).
+- **OS:** JetPack 6.2 / Ubuntu 24.04 (The latest and strictly versioned environment).
+
+However, merging these technologies into a single Docker container triggers a **"Perfect Storm" of compatibility issues**:
+
+#### 1. The Rendering Gap (Ubuntu 24.04 Issue) 
+
+Simulation environments like MetaWorld rely on **MuJoCo**. In a headless Docker container, MuJoCo requires **EGL** for GPU-accelerated rendering.
+- **The Problem:** In the new Ubuntu 24.04 (JetPack 6.2 base), the system library paths for `libEGL` and `libGL` have changed. Standard Python libraries like `PyOpenGL` cannot find them, leading to immediate crashes (`ImportError: Cannot find libEGL.so`).
+- **The Solution:** We must manually map these libraries via symbolic links inside the container.
+
+#### 2. The Dependency confilcts
+
+Jetson requires a specialized, pre-compiled version of PyTorch (`dustynv/pytorch`) to access the Tegra GPU.
+
+- **The Problem:** When you run `pip install metaworld` or `transformers`, the strict package resolver often fails to recognize this specialized PyTorch. It aggressively **uninstalls the GPU-enabled PyTorch** and replaces it with a generic CPU version from PyPI, rendering the LLM unusable.
+- **The Solution:** We implement a **"Constraint Amulet"** strategy, locking the environment to protect the system PyTorch during the build process.
+
+#### 3. Flash Attention Compilation 
+
+Flash Attention is notorious for being strictly coupled to specific CUDA versions.
+
+- **The Problem:** Pre-built wheels often don't exist for the specific combination of **aarch64 + CUDA 12.8 + Python 3.10**.
+- **The Solution:** We utilize a "Container-Native Build" approach,change the `setup.py` to force a successful compilation against the Jetson's specific architecture (`sm_87`).
+
+```python
+if "87" in cuda_archs(): 
+        cc_flag.append("-gencode")
+        cc_flag.append("arch=compute_87,code=sm_87")
+```
+
+
+### Why is this so hard?
+1.  **Architecture**: Jetson runs on **ARM64 (aarch64)**, but most pre-built wheels on PyPI are for x86_64.
+2.  **Compute Capability**: Orin uses the Ampere **sm_87** architecture. Standard PC GPUs are `sm_86` or `sm_80`. If you don't target `8.7`, you get runtime errors.
+3.  **Memory Constraints**: Compiling Flash Attention is heavy. It can easily consume 32GB+ of RAM, causing Jetson devices to crash or reboot due to OOM (Out Of Memory) whereas Jetson Orin only have 16GB memory.
+4.  **Dependency Conficts** Flash attention is too fragile that any newer or older dependency like pytorch or numpy will lead to failure. and you can't find any wheels for you can download from the internet the only solution is to compile in your computer.
+---
+## Quick Commands
+
+### Step 1: Container-Native Installation
+
+Instead of compiling flash attention in your host downloading it in your container is the best way to do it! This is because by definingthe installation steps inside the container we can ensure that:
+* The library is built/installed against the **exact** CUDA and Python versions used by the application.
+* The host OS remains clean (no dependency pollution).
+* The resulting image is portable—it works on *any* Jetson Orin, regardless of what mess is installed on the host.
+
+### Step 2: The Hard Constraint — JetPack 6.2 & CUDA 12.6 Only 
+If you are still running **JetPack 5 (L4T 35.x)**, you cannot easily run modern Flash Attention.
+
+**Why? The CUDA Gap.**
+* **Flash Attention 2** requires **CUDA 11.8+** (and ideally CUDA 12.x) to leverage the latest Tensor Core features.
+* **JetPack 5** is stuck on **CUDA 11.4** at the system level.
+
+While it is technically *possible* to hack around this with complex upgrades, it is unstable. The only supported, production-ready path for Flash Attention on Orin today is:
+
+**The Golden Target:**
+> * **OS:** JetPack 6.2 (L4T 36.x)
+> * **CUDA:** 12.6
+> * **Container Base:** `dustynv/l4t-pytorch:r36.4.0`
+
+
+
+
+### Step 3: Compile the Flash-Attention
+
+Due to the memory limit of JetsonOrin it will spend much time to install flash attention and it will often **OOM** In this case you can refer my past blog to adopt memory swap method to solve it.
+
+```python
+MAX_JOBS=2 pip install -v flash-attn --no-build-isolation
+```
+
+I have tried to set MAX_JOBS = 4 but it will easily **OOM** on JetsonOrin 16GB memory so you can reduce or increase to suit your computer. For MAX_JOBS=2 it will cost nearly 4 hours to compile Flash-Attention so it's highly recommended to check everything fine before compiling and install other dependencies first since flash attention compiling is based on current dependencies. any small changes of dependency's version will lead to flash attention not installed or can't be used.
+
+
+---
+## Issue Facing
+
+### 1. The Ubuntu 24.04 EGL Patch
+
+MetaWorld uses `MuJoCo` for physics simulation. On a headless server (like a remote Jetson), MuJoCo needs **EGL** to render images using the GPU.
+
+In **Ubuntu 24.04** (the base of JetPack 6.2), the location of `libEGL.so` changed, breaking the standard python bindings. We fix this by creating symbolic links that point the library back to where Python expects it.
+```
+# Fix for "ImportError: cannot find libEGL.so"
+RUN ln -sf /usr/lib/aarch64-linux-gnu/libEGL.so.1 /usr/lib/libEGL.so && \
+    ln -sf /usr/lib/aarch64-linux-gnu/libGL.so.1 /usr/lib/libGL.so
+```
+
+### 2. Injecting Environment Variables for Compilation
+
+When compiling Flash Attention, simply setting `ENV CUDA_HOME=...` in the Dockerfile is sometimes insufficient. The python setup script (`setup.py`) spawns subprocesses that might strip these environment variables.
+
+To guarantee success, we modify the `setup.py` file **in-place** before running it:
+
+```
+# Hardcode CUDA_HOME into the python script itself
+RUN sed -i "1s/^/import os; os.environ['CUDA_HOME'] = '\/usr\/local\/cuda-12.8';\n/" setup.py
+```
+---
+### 3. Complete DockerFile Building
+You can refer my dockerfile 
+```python
+FROM dustynv/pytorch:2.6-r36.4.0-cu128-24.04
+# 1. Environment Configuration
+# Optional: Set a faster mirror (e.g., Tuna) for China regions
+ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+ENV PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
+# Explicitly set CUDA path (Required for FlashAttn compilation)
+ENV CUDA_HOME="/usr/local/cuda-12.8"
+ENV PATH="${CUDA_HOME}/bin:${PATH}"
+ENV LD_LIBRARY_PATH="${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}"
+ENV TORCH_CUDA_ARCH_LIST="8.7"
+# Key variables for Client-side OpenGL/EGL rendering (Fixes Headless Rendering)
+ENV MUJOCO_GL="egl"
+ENV PYOPENGL_PLATFORM="egl"
+ENV NVIDIA_DRIVER_CAPABILITIES=all
+ENV MAX_JOBS=2
+ENV FLASH_ATTENTION_FORCE_BUILD=TRUE
+ENV PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive
+# 2. Install System Dependencies (Server & Client merged)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    wget \
+    build-essential \
+    libopenblas-dev \
+    ninja-build \
+    python3-pip \
+    # --- Required libs for Client-side rendering (MuJoCo/Metaworld) ---
+    libgl1 \
+    libegl1 \
+    libglvnd-dev \
+    libglx-mesa0 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --upgrade pip setuptools wheel packaging ninja --ignore-installed
+
+# 3. Critical Fix: Manually Symlink EGL
+# Fixes PyOpenGL failing to find libEGL.so on Ubuntu 24.04 (JetPack 6.2)
+RUN ln -sf /usr/lib/aarch64-linux-gnu/libEGL.so.1 /usr/lib/libEGL.so && \
+    ln -sf /usr/lib/aarch64-linux-gnu/libGL.so.1 /usr/lib/libGL.so
+
+# 4.Create the Dependency "Amulet"
+# Lock current GPU-PyTorch to prevent pip from downgrading it to CPU version
+# when installing downstream packages like Metaworld
+RUN pip3 freeze | grep -E "^torch" > /tmp/constraint.txt
+# 5. Compile Flash Attention
+# Ensure NumPy is < 2.0.0 to avoid ABI incompatibility
+RUN pip3 install "numpy<2.0.0" -c /tmp/constraint.txt
+
+WORKDIR /tmp
+COPY flash-attention /tmp/flash-attention
+
+# Inject env vars + Patch setup.py + Compile
+# We manually inject 'import os...' into setup.py because sometimes the env var
+# isn't picked up correctly by subprocesses during the build.
+RUN export CUDA_HOME="/usr/local/cuda-12.8" \
+    && export PATH="/usr/local/cuda-12.8/bin:${PATH}" \
+    && cd flash-attention \
+    && rm -rf build dist *.egg-info \
+    && sed -i "1s/^/import os; os.environ['CUDA_HOME'] = '\/usr\/local\/cuda-12.8';\n/" setup.py \
+    && python3 setup.py install \
+    && cd .. \
+    && rm -rf flash-attention
+
+# Install App Dependencies
+WORKDIR /app/evo1
+COPY Evo_1/requirements.txt /app/evo1/Evo_1/requirements.txt
+
+# Remove conflicting packages from requirements (we use the System PyTorch)
+RUN sed -i '/torch/d' Evo_1/requirements.txt && \
+    sed -i '/torchvision/d' Evo_1/requirements.txt && \
+    sed -i '/torchaudio/d' Evo_1/requirements.txt
+
+# Install deps (Strictly using -c /tmp/constraint.txt to protect PyTorch)
+RUN pip3 install -r Evo_1/requirements.txt -c /tmp/constraint.txt
+
+# Install Client Core Libs
+RUN pip3 install \
+    mujoco \
+    metaworld \
+    websockets \
+    opencv-python-headless \
+    huggingface_hub \
+    termcolor \
+    -c /tmp/constraint.txt
+
+# 7. Startup Settings
+WORKDIR /app/evo1
+COPY . /app/evo1
+
+# Default to Server (Client can override via command)
+EXPOSE 9000
+CMD ["python3", "Evo_1/scripts/Evo1_server.py"]
+```
+
+---
+
+## Build and Run 
+
+Now that we understand the strategy, let's build the container.
+
+### Prerequisites
+- **Hardware:** Jetson Orin (Nano, NX, or AGX)
+- **OS:** JetPack 6.2 (L4T 36.x)
+- **Directory Structure:**
+  ```
+  project_root/
+  ├── Dockerfile
+  ├── Evo_1/              # Your VLA code folder
+  └── flash-attention/    # Cloned source code
+  ```
+
+### Step 1: Clone Flash Attention
+
+We need the source code locally to copy it into the container.
+
+```
+git clone [https://github.com/Dao-AILab/flash-attention](https://github.com/Dao-AILab/flash-attention)
+cd flash-attention
+# Optional: Checkout a specific version if needed
+# git checkout v2.5.6
+cd ..
+```
+
+### Step 2: Build the Image
+
+This will take about **15-20 minutes** on an Orin AGX (longer on Nano/NX) because of the compilation step.
+```
+docker build -t evo1-vla:latest .
+```
+
+### Step 3: Run the Server (Inference Mode)
+
+The default command in our Dockerfile starts the Evo-1 Server.
+**Crucial Flags:**
+- `--runtime nvidia`: Enables GPU access.
+- `--network host`: Allows the server to bind ports accessible by the host.
+```
+docker run -it --rm \
+    --runtime nvidia \
+    --network host \
+    --name evo1-server \
+    evo1-vla:latest
+```
+
+### Step 4: Run the Client (Simulation Mode)
+
+You can use the same image to run the MetaWorld evaluation client. We simply override the default command.
+```
+docker run -it --rm \
+    --runtime nvidia \
+    --network host \
+    --name evo1-client \
+    evo1-vla:latest \
+    python3 Evo_1/MetaWorld_evaluation/mt50_evo1_client_prompt.py
+```
+
+------
+
+## Verification 
+
+To ensure everything is working as expected, you can run a quick sanity check inside the container:
+```
+# Enter the container
+docker run -it --rm --runtime nvidia evo1-vla:latest bash
+
+# 1. Check Flash Attention
+python3 -c "import flash_attn; print('Flash Attention: OK')"
+
+# 2. Check OpenGL/EGL (Should not error)
+python3 -c "from mujoco import MjModel, MjData, MjRenderer; print('MuJoCo EGL: OK')"
+```
+
+### Conclusion
+
+Containerizing complex AI stacks on Edge devices requires more than just a `requirements.txt`. It requires understanding the interplay between the OS, the GPU drivers, and the Python ecosystem.
+
+By **locking dependencies**, **patching system libraries**, and **controlling the compilation environment**, we have created a robust, reproducible environment for Vision-Language-Action models on the Jetson Orin.
+### Reference
+- https://github.com/dusty-nv/jetson-containers/issues/1220
+- https://github.com/MINT-SJTU/Evo-1?tab=readme-ov-file
+- https://forums.developer.nvidia.com/t/download-pytorch-for-cuda-12-6/346216
