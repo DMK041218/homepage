@@ -4,7 +4,7 @@ import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
 import { Image } from "astro:assets";
-import headShot from "../assets/Haibara.jpg";
+import headShot from "../assets/profile-avatar.png";
 import PublicationCard from "../components/Publication.astro";
 import publications from "../data/publications.json";
 import { Icon } from "astro-icon/components";
@@ -12,6 +12,29 @@ import { Icon } from "astro-icon/components";
 const sortedPubs = publications.sort((a, b) => {
 	return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
 });
+
+const news = [
+	{
+		date: "Sep 2026",
+		text: '<a href="https://arxiv.org/abs/2605.14950" target="_blank"><strong>Evo-Depth</strong></a> accepted by <strong>NeurIPS 2026</strong>.',
+	},
+	{
+		date: "Jun 2026",
+		text: '<a href="https://arxiv.org/abs/2511.19474" target="_blank"><strong>Pistachio</strong></a> has also been accepted by <strong>ECCV 2026</strong>.',
+	},
+	{
+		date: "Jun 2026",
+		text: 'My <span class="news-highlight">first leading paper</span> is accepted by <strong>ECCV 2026</strong>. Check out <a href="https://arxiv.org/abs/2603.01195" target="_blank"><strong>VisNec</strong></a>.',
+	},
+	{
+		date: "Apr 2026",
+		text: 'One paper has been accepted to <strong>CVPR 2026 Highlight</strong>! Check out <a href="https://arxiv.org/abs/2508.00445" target="_blank"><strong>AutoDebias</strong></a>.',
+	},
+	{
+		date: "Nov 2025",
+		text: 'Joined <strong>Shanghai Jiao Tong University</strong> as a Research Assistant, advised by <a href="https://scholar.google.com/citations?user=R3_AR5EAAAAJ&hl=zh-CN" target="_blank"><strong>Bo Zhao</strong></a>.',
+	},
+];
 ---
 
 <!doctype html>
@@ -24,28 +47,91 @@ const sortedPubs = publications.sort((a, b) => {
 		/>
 
 		<style>
-			#head-shot,
-			#container-headshot {
-				width: 700px;
-				height: 200px;
+			/* ── Layout ── */
+			.page-layout {
+				display: flex;
+				max-width: 1200px;
+				margin: 0 auto;
+				padding: 3em 1.5em;
+				gap: 2.5rem;
+				align-items: flex-start;
 			}
 
+			.main-content {
+				flex: 1;
+				min-width: 0;
+			}
+
+			/* ── Side Nav ── */
+			.side-nav {
+				width: 140px;
+				flex-shrink: 0;
+				position: sticky;
+				top: 80px;
+				align-self: flex-start;
+			}
+
+			.side-nav nav {
+				display: flex;
+				flex-direction: column;
+				gap: 0.25rem;
+			}
+
+			.nav-link {
+				display: block;
+				padding: 0.45rem 0.75rem;
+				color: #9ca3af;
+				text-decoration: none;
+				border-left: 2px solid #e5e7eb;
+				font-size: 0.88rem;
+				font-weight: 500;
+				transition: all 0.2s ease;
+				letter-spacing: 0.01em;
+			}
+
+			.nav-link:hover {
+				color: #374151;
+				border-left-color: #9ca3af;
+			}
+
+			.nav-link.active {
+				color: #3b82f6;
+				border-left-color: #3b82f6;
+			}
+
+			/* ── Sections ── */
+			section {
+				margin-bottom: 3rem;
+			}
+
+			section h4 {
+				font-size: 1.05rem;
+				font-weight: 700;
+				color: #111827;
+				margin-bottom: 1.2rem;
+				padding-bottom: 0.4rem;
+				border-bottom: 2px solid #e5e7eb;
+			}
+
+			/* ── About ── */
 			#head-shot {
-				max-width: 200px;
+				width: 200px;
+				height: 200px;
 				border-radius: 50%;
 				object-fit: cover;
+				object-position: 40% center;
 				box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
-
 				transition: all 0.7s cubic-bezier(0.6, -0.28, 0.735, 0.045);
 			}
 
 			#container-headshot {
+				width: 220px;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
-				justify-content: center;
 				gap: 1rem;
 			}
+
 			#head-shot:hover {
 				transform: scale(1.15) rotate(360deg);
 			}
@@ -54,236 +140,357 @@ const sortedPubs = publications.sort((a, b) => {
 				display: flex;
 				flex-direction: row;
 				align-items: center;
-				justify-content: center;
-				gap: 5rem;
+				gap: 3rem;
 			}
-
-			#container-intro-research-list {
-				margin-top: 80px;
-			}
-
-            /* --- 新增：Project 板块的样式 --- */
-            #container-projects {
-                margin-top: 60px;
-            }
-
-            .project-title {
-                margin-bottom: 0.5rem;
-                font-size: 1.1em;
-                font-weight: bold;
-            }
-
-            .project-description {
-                margin-bottom: 1.5rem;
-                font-size: 0.95em;
-                color: #555;
-            }
-
-            /* 四宫格视频布局 */
-            .video-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr); /* 3列 */
-                gap: 0px; /* 视频之间的间距 */
-                width: 100%;
-            }
-
-            .video-item {
-                width: 100%;
-                height: auto;
-                border-radius: 8px; /* 圆角，让视频看起来更柔和 */
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                object-fit: cover;
-                background-color: #000; /* 加载前的背景色 */
-                aspect-ratio: 16/9; /* 强制保持 16:9 比例，你可以根据视频调整 */
-            }
-
-            /* --- 结束 Project 样式 --- */
 
 			.social-links {
 				display: flex;
 				gap: 1.1rem;
 			}
+
 			p {
 				line-height: 1.55;
 				margin: 11px 0;
 			}
+
 			ul {
 				list-style: none;
 				padding-left: 0;
 			}
 
-			#teaser {
-				width: 70%;
-
-				margin: auto;
-				padding: 3em 1em;
+			/* ── News ── */
+			.news-list {
+				display: flex;
+				flex-direction: column;
+				gap: 0.75rem;
 			}
 
-			/* 手机尺寸下隐藏头像容器 */
-			@media (max-width: 720px) {
-				#container-headshot {
-					display: none;
-				}
+			.news-item {
+				display: flex;
+				gap: 1rem;
+				align-items: baseline;
+				font-size: 0.92rem;
+				line-height: 1.5;
+			}
 
+			.news-date {
+				flex-shrink: 0;
+				color: #6b7280;
+				font-size: 0.82rem;
+				font-weight: 600;
+				width: 72px;
+			}
+
+			.news-text {
+				color: #111827;
+			}
+
+			:global(.news-highlight) {
+				color: #dc2626;
+				font-weight: 700;
+			}
+
+			/* ── Research Interests ── */
+			.interests-list {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+			}
+
+			.interest-tag {
+				padding: 0.3rem 0.85rem;
+				border-radius: 999px;
+				background: #eff6ff;
+				color: #1d4ed8;
+				font-size: 0.85rem;
+				font-weight: 500;
+				border: 1px solid #bfdbfe;
+			}
+
+			/* ── Projects ── */
+			.project-title {
+				margin-bottom: 0.5rem;
+				font-size: 1.0em;
+				font-weight: bold;
+			}
+
+			.project-description {
+				margin-bottom: 1.2rem;
+				font-size: 0.92em;
+				color: #555;
+			}
+
+			.video-grid {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 0px;
+				width: 100%;
+			}
+
+			.video-item {
+				width: 100%;
+				height: auto;
+				border-radius: 8px;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+				object-fit: cover;
+				background-color: #000;
+				aspect-ratio: 16/9;
+			}
+
+			/* ── Animations ── */
+			@keyframes floatUp {
+				from { opacity: 0; transform: translateY(30px); }
+				to   { opacity: 1; transform: translateY(0); }
+			}
+
+			#about        { animation: floatUp 0.8s ease-out 0.0s forwards; opacity: 0; }
+			#news         { animation: floatUp 0.8s ease-out 0.2s forwards; opacity: 0; }
+			#interests    { animation: floatUp 0.8s ease-out 0.3s forwards; opacity: 0; }
+			#publications { animation: floatUp 0.8s ease-out 0.4s forwards; opacity: 0; }
+			#projects     { animation: floatUp 0.8s ease-out 0.6s forwards; opacity: 0; }
+
+			/* ── Responsive ── */
+			@media (max-width: 720px) {
+				.side-nav { display: none; }
 				#container-intro {
 					flex-direction: column;
-					gap: 2rem;
+					align-items: center;
+					gap: 1.5rem;
 				}
-			}
-
-
-			/* Float up 动画 */
-			@keyframes floatUp {
-				from {
-					opacity: 0;
-					transform: translateY(30px);
+				#container-headshot {
+					width: auto;
 				}
-				to {
-					opacity: 1;
-					transform: translateY(0);
+				#container-intro-text {
+					text-align: center;
 				}
+				.page-layout { padding: 2em 1em; }
 			}
-
-			#teaser {
-				animation: floatUp 0.8s ease-out forwards;
-			}
-
-			/* 为子元素添加延迟动画 */
-			#container-intro {
-				animation: floatUp 0.8s ease-out 0.2s forwards;
-				opacity: 0;
-			}
-
-			#container-intro-research-list {
-				animation: floatUp 0.8s ease-out 0.4s forwards;
-				opacity: 0;
-			}
-
-            /* Project 板块的延迟动画，比 Publication 晚一点 */
-            #container-projects {
-                animation: floatUp 0.8s ease-out 0.6s forwards;
-                opacity: 0;
-            }
 		</style>
 	</head>
 	<body>
 		<Header />
-		<main>
-			<div id="teaser">
-				<div id="container-intro">
-					<div id="container-headshot">
-						<Image src={headShot} id="head-shot" alt="Hongyi Cai" />
+		<div class="page-layout">
 
-						<div class="social-links">
-							<a
-								href="https://github.com/DMK041218"
-								target="_blank"
-							>
-								<Icon name="mdi:github" size={32} />
-							</a>
-							<a
-								href="https://scholar.google.com/citations?user=IfndI8AAAAAJ&hl"
-								target="_blank"
-							>
-								<Icon name="mdi:google" size={32} />
-							</a>
-							<a
-								href="https://www.linkedin.com/in/dmingkang/"
-								target="_blank"
-							>
-								<Icon name="mdi:linkedin" size={32} />
-							</a>
+			<!-- Left sidebar nav -->
+			<aside class="side-nav">
+				<nav>
+					<a href="#about" class="nav-link active" data-i18n="nav-about">About</a>
+					<a href="#news" class="nav-link" data-i18n="nav-news">News</a>
+					<a href="#interests" class="nav-link" data-i18n="nav-interests">Interests</a>
+					<a href="#publications" class="nav-link" data-i18n="nav-publications">Publications</a>
+					<a href="#projects" class="nav-link" data-i18n="nav-projects">Projects</a>
+					<a href="/blog" class="nav-link" data-i18n="nav-blog">Blog</a>
+				</nav>
+			</aside>
+
+			<main class="main-content">
+
+				<!-- About -->
+				<section id="about">
+					<div id="container-intro">
+						<div id="container-headshot">
+							<Image src={headShot} id="head-shot" alt="Mingkang Dong" />
+							<div class="social-links">
+								<a href="https://github.com/DMK041218" target="_blank">
+									<Icon name="mdi:github" size={28} />
+								</a>
+								<a href="https://scholar.google.com/citations?user=IfndI8AAAAAJ&hl" target="_blank">
+									<Icon name="mdi:google" size={28} />
+								</a>
+								<a href="https://www.linkedin.com/in/dmingkang/" target="_blank">
+									<Icon name="mdi:linkedin" size={28} />
+								</a>
+							</div>
+						</div>
+
+						<div id="container-intro-text">
+							<h3>Mingkang Dong | 董明康 | あきやす</h3>
+							<p data-i18n="intro">I am a third-year undergraduate student in Software Engineering at <b>Universiti Malaya</b>.</p>
 						</div>
 					</div>
+				</section>
 
-					<div id="container-intro-text">
-						<h2>Mingkang Dong | 董明康</h2>
-
-						<p>
-							Hi there! I am <b>Mingkang Dong</b>, an undergraduate student majoring in Software engineering at 
-  <b>Universiti Malaya</b>. My current research and engineering interests lie at the intersection of 
-  <b>Vision-Language Models (VLMs)</b>, <b>Large Language Models (LLMs)</b>, and <b>Embodied AI</b>. 
-  Recently, I have been working on <b>Vision-Language-Action (VLA) systems</b> for robotic understanding 
-  and multimodal reasoning, as well as <b>medical VLMs</b> that enable visual-textual understanding 
-  in radiology and clinical imaging domains.
-						</p>
-						<p>
-							I have hands-on experience in <b>fine-tuning and evaluating large multimodal models</b> I am currently a research assistant at 
-  <b>Shanghai Jiao Tong University</b>, where I focus on integrating multimodal representation learning 
-  with embodied intelligence and interactive perception. 
-						</p>
-						<p>
-							Understanding how intelligence emerges from perception, language, and action — and turning that understanding into working systems — 
-  is the challenge that keeps me excited every single day.
-						</p>
-
-						<p>
-							<b>I am currently looking for a Mphil position or a funded RA position, available starting from 2027 March, physical internship preferred</b>
-						</p>
+				<!-- News -->
+				<section id="news">
+					<h4 data-i18n="h-news">News</h4>
+					<div class="news-list">
+						<div class="news-item">
+							<span class="news-date" data-i18n="news-date-0">Sep 2026</span>
+							<span class="news-text" data-i18n="news-0"><a href="https://arxiv.org/abs/2605.14950" target="_blank"><strong>Evo-Depth</strong></a> accepted by <strong>NeurIPS 2026</strong>.</span>
+						</div>
+						<div class="news-item">
+							<span class="news-date" data-i18n="news-date-1">Jun 2026</span>
+							<span class="news-text" data-i18n="news-1"><a href="https://arxiv.org/abs/2511.19474" target="_blank"><strong>Pistachio</strong></a> has also been accepted by <strong>ECCV 2026</strong>.</span>
+						</div>
+						<div class="news-item">
+							<span class="news-date" data-i18n="news-date-2">Jun 2026</span>
+							<span class="news-text" data-i18n="news-2">My <span class="news-highlight">first leading paper</span> is accepted by <strong>ECCV 2026</strong>. Check out <a href="https://arxiv.org/abs/2603.01195" target="_blank"><strong>VisNec</strong></a>.</span>
+						</div>
+						<div class="news-item">
+							<span class="news-date" data-i18n="news-date-3">Apr 2026</span>
+							<span class="news-text" data-i18n="news-3">One paper has been accepted to <strong>CVPR 2026 Highlight</strong>! Check out <a href="https://arxiv.org/abs/2508.00445" target="_blank"><strong>AutoDebias</strong></a>.</span>
+						</div>
+						<div class="news-item">
+							<span class="news-date" data-i18n="news-date-4">Nov 2025</span>
+							<span class="news-text" data-i18n="news-4">Joined <strong>Shanghai Jiao Tong University</strong> as a Research Assistant, advised by <a href="https://scholar.google.com/citations?user=R3_AR5EAAAAJ&hl=zh-CN" target="_blank"><strong>Bo Zhao</strong></a>.</span>
+						</div>
 					</div>
-				</div>
+				</section>
 
-				<div id="container-intro-research-list">
-					<h4>Preprint / Publications</h4>
+				<!-- Research Interests -->
+				<section id="interests">
+					<h4 data-i18n="h-interests">Research Interests</h4>
+					<div class="interests-list">
+						<span class="interest-tag" data-i18n="tag-0">Data Centric AI</span>
+						<span class="interest-tag" data-i18n="tag-1">Video Understanding</span>
+						<span class="interest-tag" data-i18n="tag-2">Embodied AI</span>
+						<span class="interest-tag" data-i18n="tag-3">Video Generation</span>
+						<span class="interest-tag" data-i18n="tag-4">AI Generated Content</span>
+						<span class="interest-tag" data-i18n="tag-5">Egocentric & First-Person Vision</span>
+					</div>
+				</section>
+
+				<!-- Publications -->
+				<section id="publications">
+					<h4 data-i18n="h-publications">Preprint / Publications</h4>
 					<ul>
-						{
-							sortedPubs.map((pub) => (
-								<li>
-									<PublicationCard
-										title={pub.title}
-										abstract={pub.abstract}
-										pubDate={pub.pubDate}
-										heroImage={pub.heroImage}
-										conference={pub.conference}
-										href={pub.href}
-										authors={pub.authors}
-									/>
-								</li>
-							))
-						}
+						{sortedPubs.map((pub) => (
+							<li>
+								<PublicationCard
+									title={pub.title}
+									abstract={pub.abstract}
+									pubDate={pub.pubDate}
+									heroImage={pub.heroImage}
+									conference={pub.conference}
+									href={pub.href}
+									authors={pub.authors}
+								/>
+							</li>
+						))}
 					</ul>
-				</div>
+				</section>
 
-                <div id="container-projects">
-                    <h4>Projects</h4>
-                    
-                    <div class="project-card">
-                        <div class="project-title">
-                            Evo-1 Embodied Deployment: Full-Stack VLA Implementation on SO101 robot arm
-                        </div>
-                        <p class="project-description">
-                            During my intern in Shanghai Jiao Tong University, I led the deployment of our team's lightweight Evo-1 VLA model Through optimization and adaptation for the SO101 robotic arm, I achieved great performance in complex, real-world tasks. Key achievements include Picking up trash, Precision placement of tennis balls, Precision placement of golf balls, Putting rectangular objects into the box, Fine grasping of delicate items like snacks, and Grasping of shuttlecocks.
-
-                       <!-- HTML：3x3 网格，但只放 6 个视频（上面两行） -->
+				<!-- Projects -->
+				<section id="projects">
+					<h4 data-i18n="h-projects">Projects</h4>
+					<div class="project-card">
+						<div class="project-title" data-i18n="proj-title">
+							Evo-1 Embodied Deployment: Full-Stack VLA Implementation on SO101 robot arm
+						</div>
+						<p class="project-description" data-i18n="proj-desc">
+							During my intern in Shanghai Jiao Tong University, I led the deployment of our team's lightweight Evo-1 VLA model. Through optimization and adaptation for the SO101 robotic arm, I achieved great performance in complex, real-world tasks. Key achievements include Picking up trash, Precision placement of tennis balls, Precision placement of golf balls, Putting rectangular objects into the box, Fine grasping of delicate items like snacks, and Grasping of shuttlecocks.
+						</p>
 						<div class="video-grid">
-							<video class="video-item" src="/videos/demo1.mp4" autoplay loop muted playsinline>
-								<source src="/videos/demo1.mp4" type="video/mp4" />
-								
-							</video>
-							<video class="video-item" src="/videos/demo2.mp4" autoplay loop muted playsinline>
-								<source src="/videos/demo2.mp4" type="video/mp4" />
-							</video>
-							<video class="video-item" src="/videos/demo3.mp4" autoplay loop muted playsinline>
-								<source src="/videos/demo3.mp4" type="video/mp4" />
-							</video>
-							<video class="video-item" src="/videos/demo4.mp4" autoplay loop muted playsinline>
-								<source src="/videos/demo4.mp4" type="video/mp4" />
-							</video>
-							<video class="video-item" src="/videos/demo5.mp4" autoplay loop muted playsinline>
-								<source src="/videos/demo4.mp4" type="video/mp4" />
-							</video>
-							<video class="video-item" src="/videos/demo6.mp4" autoplay loop muted playsinline>
-								<source src="/videos/demo4.mp4" type="video/mp4" />
-							</video>
+							<video class="video-item" src="/videos/demo1.mp4" autoplay loop muted playsinline></video>
+							<video class="video-item" src="/videos/demo2.mp4" autoplay loop muted playsinline></video>
+							<video class="video-item" src="/videos/demo3.mp4" autoplay loop muted playsinline></video>
+							<video class="video-item" src="/videos/demo4.mp4" autoplay loop muted playsinline></video>
+							<video class="video-item" src="/videos/demo5.mp4" autoplay loop muted playsinline></video>
+							<video class="video-item" src="/videos/demo6.mp4" autoplay loop muted playsinline></video>
 						</div>
+					</div>
+				</section>
 
-
-						</div>
-                    </div>
-                </div>
-
-			</div>
-		</main>
+			</main>
+		</div>
 		<Footer />
+
+		<script>
+			const t: Record<string, Record<string, string>> = {
+				en: {
+					'nav-about': 'About', 'nav-news': 'News', 'nav-interests': 'Interests',
+					'nav-publications': 'Publications', 'nav-projects': 'Projects', 'nav-blog': 'Blog',
+					'intro': 'I am a third-year undergraduate student in Software Engineering at <b>Universiti Malaya</b>.',
+					'h-news': 'News', 'h-interests': 'Research Interests',
+					'h-publications': 'Preprint / Publications', 'h-projects': 'Projects',
+					'news-date-0': 'Sep 2026', 'news-date-1': 'Jun 2026',
+					'news-date-2': 'Jun 2026', 'news-date-3': 'Apr 2026', 'news-date-4': 'Nov 2025',
+					'news-0': '<a href="https://arxiv.org/abs/2605.14950" target="_blank"><strong>Evo-Depth</strong></a> accepted by <strong>NeurIPS 2026</strong>.',
+					'news-1': '<a href="https://arxiv.org/abs/2511.19474" target="_blank"><strong>Pistachio</strong></a> has also been accepted by <strong>ECCV 2026</strong>.',
+					'news-2': 'My <span class="news-highlight">first leading paper</span> is accepted by <strong>ECCV 2026</strong>. Check out <a href="https://arxiv.org/abs/2603.01195" target="_blank"><strong>VisNec</strong></a>.',
+					'news-3': 'One paper has been accepted to <strong>CVPR 2026 Highlight</strong>! Check out <a href="https://arxiv.org/abs/2508.00445" target="_blank"><strong>AutoDebias</strong></a>.',
+					'news-4': 'Joined <strong>Shanghai Jiao Tong University</strong> as a Research Assistant, advised by <a href="https://scholar.google.com/citations?user=R3_AR5EAAAAJ&hl=zh-CN" target="_blank"><strong>Bo Zhao</strong></a>.',
+					'tag-0': 'Data Centric AI', 'tag-1': 'Video Understanding',
+					'tag-2': 'Embodied AI', 'tag-3': 'Video Generation', 'tag-4': 'AI Generated Content',
+					'tag-5': 'Egocentric & First-Person Vision',
+					'proj-title': 'Evo-1 Embodied Deployment: Full-Stack VLA Implementation on SO101 robot arm',
+					'proj-desc': "During my intern in Shanghai Jiao Tong University, I led the deployment of our team's lightweight Evo-1 VLA model. Through optimization and adaptation for the SO101 robotic arm, I achieved great performance in complex, real-world tasks.",
+				},
+				zh: {
+					'nav-about': '关于', 'nav-news': '动态', 'nav-interests': '研究方向',
+					'nav-publications': '论文', 'nav-projects': '项目', 'nav-blog': '博客',
+					'intro': '我是<b>马来亚大学</b>软件工程专业大三学生。',
+					'h-news': '动态', 'h-interests': '研究方向',
+					'h-publications': '预印本 / 发表论文', 'h-projects': '项目',
+					'news-date-0': '2026年9月', 'news-date-1': '2026年6月',
+					'news-date-2': '2026年6月', 'news-date-3': '2026年4月', 'news-date-4': '2025年11月',
+					'news-0': '<a href="https://arxiv.org/abs/2605.14950" target="_blank"><strong>Evo-Depth</strong></a> 被 <strong>NeurIPS 2026</strong> 录用。',
+					'news-1': '<a href="https://arxiv.org/abs/2511.19474" target="_blank"><strong>Pistachio</strong></a> 也被 <strong>ECCV 2026</strong> 录用。',
+					'news-2': '我的<span class="news-highlight">第一篇一作论文</span>被 <strong>ECCV 2026</strong> 录用。查看 <a href="https://arxiv.org/abs/2603.01195" target="_blank"><strong>VisNec</strong></a>。',
+					'news-3': '一篇论文被 <strong>CVPR 2026</strong> 录用为 <strong>Highlight</strong>！查看 <a href="https://arxiv.org/abs/2508.00445" target="_blank"><strong>AutoDebias</strong></a>。',
+					'news-4': '加入<strong>上海交通大学</strong>担任科研助理，导师为 <a href="https://scholar.google.com/citations?user=R3_AR5EAAAAJ&hl=zh-CN" target="_blank"><strong>Bo Zhao</strong></a>。',
+					'tag-0': '数据中心 AI', 'tag-1': '视频理解',
+					'tag-2': '具身智能', 'tag-3': '视频生成', 'tag-4': 'AI 生成内容',
+					'tag-5': '自我中心与第一人称视角',
+					'proj-title': 'Evo-1 具身部署：SO101 机械臂全栈 VLA 实现',
+					'proj-desc': '在上海交通大学实习期间，我主导了团队轻量级 Evo-1 VLA 模型在 SO101 机械臂上的部署。通过对机械臂的优化与适配，在复杂真实任务中取得了优异表现。',
+				},
+				ja: {
+					'nav-about': 'プロフィール', 'nav-news': 'ニュース', 'nav-interests': '研究興味',
+					'nav-publications': '論文', 'nav-projects': 'プロジェクト', 'nav-blog': 'ブログ',
+					'intro': '<b>マラヤ大学</b>ソフトウェア工学科3年生です。',
+					'h-news': 'ニュース', 'h-interests': '研究興味',
+					'h-publications': 'プレプリント / 論文', 'h-projects': 'プロジェクト',
+					'news-date-0': '2026年9月', 'news-date-1': '2026年6月',
+					'news-date-2': '2026年6月', 'news-date-3': '2026年4月', 'news-date-4': '2025年11月',
+					'news-0': '<a href="https://arxiv.org/abs/2605.14950" target="_blank"><strong>Evo-Depth</strong></a> が <strong>NeurIPS 2026</strong> に採択されました。',
+					'news-1': '<a href="https://arxiv.org/abs/2511.19474" target="_blank"><strong>Pistachio</strong></a> も <strong>ECCV 2026</strong> に採択されました。',
+					'news-2': '私の<span class="news-highlight">初めての主著論文</span>が <strong>ECCV 2026</strong> に採択されました。<a href="https://arxiv.org/abs/2603.01195" target="_blank"><strong>VisNec</strong></a> をご覧ください。',
+					'news-3': '論文1本が <strong>CVPR 2026 Highlight</strong> に採択されました！<a href="https://arxiv.org/abs/2508.00445" target="_blank"><strong>AutoDebias</strong></a> をご覧ください。',
+					'news-4': '<strong>上海交通大学</strong>に研究アシスタントとして参加。指導教員：<a href="https://scholar.google.com/citations?user=R3_AR5EAAAAJ&hl=zh-CN" target="_blank"><strong>Bo Zhao</strong></a>。',
+					'tag-0': 'データ中心型 AI', 'tag-1': '動画理解',
+					'tag-2': '身体性 AI', 'tag-3': '動画生成', 'tag-4': 'AI 生成コンテンツ',
+					'tag-5': '自己中心・一人称視点映像',
+					'proj-title': 'Evo-1 身体性展開：SO101 ロボットアームへのフルスタック VLA 実装',
+					'proj-desc': '上海交通大学インターン中、チームの軽量 Evo-1 VLA モデルを SO101 ロボットアームに展開。最適化と適応を通じて、複雑な実環境タスクで高い性能を達成しました。',
+				},
+			};
+
+			function applyLang(lang: string) {
+				const dict = t[lang] ?? t['en'];
+				document.querySelectorAll<HTMLElement>('[data-i18n]').forEach(el => {
+					const key = el.dataset.i18n!;
+					if (dict[key] !== undefined) el.innerHTML = dict[key];
+				});
+			}
+
+			const initLang = localStorage.getItem('lang') || 'en';
+			applyLang(initLang);
+			window.addEventListener('langchange', (e) => applyLang((e as CustomEvent<string>).detail));
+		</script>
+
+		<script>
+			// Highlight active nav link on scroll
+			const sections = document.querySelectorAll('section[id]');
+			const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+
+			const observer = new IntersectionObserver(
+				(entries) => {
+					entries.forEach((entry) => {
+						if (entry.isIntersecting) {
+							navLinks.forEach((link) => {
+								link.classList.toggle(
+									'active',
+									link.getAttribute('href') === `#${entry.target.id}`
+								);
+							});
+						}
+					});
+				},
+				{ rootMargin: '-30% 0px -60% 0px' }
+			);
+
+			sections.forEach((s) => observer.observe(s));
+		</script>
 	</body>
 </html>
